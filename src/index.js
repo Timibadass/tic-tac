@@ -91,23 +91,42 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      history: [Array(9).fill(null)],
       squares: Array(9).fill(null),
+      stepNumber: 0,
       xIsNext: true,
     };
     this.handleClick = this.handleClick.bind(this);
+    this.jumpTo = this.jumpTo.bind(this);
   }
 
   handleClick(i) {
     let squares = this.state.squares.slice();
     let nextValue = !this.state.xIsNext;
+    let stepNumber = this.state.stepNumber;
+    const history = this.state.history.slice(0, stepNumber + 1);
     if (calculateWinner(squares) || squares[i] !== null) return;
     squares[i] = this.state.xIsNext ? "X" : "O";
+    history.push(squares);
     this.setState({
       squares: squares,
+      history: history,
       xIsNext: nextValue,
+      stepNumber: history.length,
     });
   }
+
+  jumpTo(step) {
+    let history = this.state.history;
+    this.setState({
+      stepNumber: step,
+      xIsNext: step % 2 === 0,
+      squares: history[step],
+    });
+  }
+
   render() {
+    const history = this.state.history;
     let squares = this.state.squares;
     let nextPlayer = this.state.xIsNext ? "X" : "O";
     const winner = calculateWinner(this.state.squares);
@@ -117,6 +136,14 @@ class Game extends React.Component {
     } else {
       status = `Next player: ${nextPlayer}`;
     }
+    const moves = history.map((step, move) => {
+      const desc = move ? "Go to move #" + move : "Go to game start";
+      return (
+        <li key={move}>
+          <button onClick={() => this.jumpTo(move)}>{desc}</button>
+        </li>
+      );
+    });
     return (
       <div className="game">
         <div className="game-board">
@@ -124,13 +151,11 @@ class Game extends React.Component {
         </div>
         <div className="game-info">
           <div>{status}</div>
-          <ol>{/* TODO */}</ol>
+          <ol>{moves}</ol>
         </div>
       </div>
     );
   }
 }
-
-// ========================================
 
 ReactDOM.render(<Game />, document.getElementById("root"));
